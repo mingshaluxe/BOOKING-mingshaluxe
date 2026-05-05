@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mingsha Luxe Nail Studio - Book Your Appointment</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff69b4, #ff1493, #ffc0cb);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(45deg, #ff69b4, #ff1493);
+            color: white;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(255, 105, 180, 0.3);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .header .contact {
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #ff69b4;
+            font-size: 0.9rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ff69b4;
+            border-radius: 15px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #ff1493;
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 15px;
+            border: 2px solid #ff69b4;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #ff69b4, #ff1493);
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background: linear-gradient(45deg, #ff1493, #ff69b4);
+            transform: translateY(-2px);
+        }
+
+        .preview-container {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .nail-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #ff69b4, #ff1493);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 105, 180, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            background: linear-gradient(45deg, #90ee90, #98fb98);
+            color: #2d5a2d;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+            font-weight: bold;
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            display: none;
+        }
+
+        .admin-login {
+            text-align: center;
+        }
+
+        .admin-login input {
+            margin-bottom: 20px;
+        }
+
+        .booking-list {
+            margin-top: 20px;
+        }
+
+        .booking-item {
+            background: white;
+            border: 2px solid #ff69b4;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .booking-item h3 {
+            color: #ff1493;
+            margin-bottom: 10px;
+        }
+
+        .booking-details {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .nail-image-admin {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 10px;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .view-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toggle-btn {
+            background: rgba(255, 105, 180, 0.9);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .delete-btn, .add-booking-btn {
+            background: #ff1493;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .delete-btn:hover, .add-booking-btn:hover {
+            background: #cc0066;
+        }
+
+        .booking-actions {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-select {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff1493;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .toggle-btn {
+            position: relative;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 20, 147, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 20, 147, 0); }
+        }
+
+        .tab-btn {
+            background: #fff0f5;
+            border: 2px solid #ffc0cb;
+            color: #ff69b4;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(45deg, #ff69b4, #ff1493);
+            color: white;
+            border-color: #ff1493;
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.3);
+        }
+
+        .add-booking-form {
+            background: #fff5f7;
+            border: 2px dashed #ff69b4;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .online-status {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .online-status.offline {
+            background: #f44336;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #ff69b4;
+        }
+    </style>
+</head>
+<body>
+    <div class="online-status" id="onlineStatus">🟢 Online - Real-time Sync</div>
+
+    <div class="view-toggle">
+        <button class="toggle-btn" onclick="toggleView()">Admin View</button>
+    </div>
+
+    <!-- Client Booking Form -->
+    <div id="clientView" class="container">
+        <div class="header">
+            <h1>✨ Mingsha Luxe Nail Studio ✨</h1>
+            <p>Edquiban compound, Purok Singko, 53 Narra St.<br>Brgy Barretto, Olongapo City, Zambales 2200</p>
+            <div class="contact">
+                📞 0931 883 3614 | ✉️ mingshaluxenailstudio@gmail.com
+            </div>
+        </div>
+
+        <form id="bookingForm">
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="fullName" required>
+            </div>
+
+            <div class="form-group">
+                <label>Address *</label>
+                <input type="text" id="address" required>
+            </div>
+
+            <div class="form-group">
+                <label>Contact Number *</label>
+                <input type="tel" id="contact" required>
+            </div>
+
+            <div class="form-group">
+                <label>Email *</label>
+                <input type="email" id="email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Service *</label>
+                <select id="service" required>
+                    <option value="">Select Service</option>
+                    <option value="Gel Manicure">💅 Gel Manicure</option>
+                    <option value="Structured Builder Gel">✨ Structured Builder Gel</option>
+                    <option value="Softgel Extension">🌸 Softgel Extension</option>
+                    <option value="Hardgel Overlay">💎 Hardgel Overlay</option>
+                    <option value="Hardgel Extension">🔥 Hardgel Extension</option>
+                    <option value="Removal of Nail Enhancement">🧴 Removal of Nail Enhancement</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Preferred Date *</label>
+                <input type="date" id="date" required>
+            </div>
+
+            <div class="form-group">
+                <label>Preferred Time *</label>
+                <select id="time" required>
+                    <option value="">Select Time</option>
+                    <option value="09:00 AM">09:00 AM</option>
+                    <option value="10:00 AM">10:00 AM</option>
+                    <option value="11:00 AM">11:00 AM</option>
+                    <option value="01:00 PM">01:00 PM</option>
+                    <option value="02:00 PM">02:00 PM</option>
+                    <option value="03:00 PM">03:00 PM</option>
+                    <option value="04:00 PM">04:00 PM</option>
+                    <option value="05:00 PM">05:00 PM</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Nail Length *</label>
+                <select id="nailLength" required>
+                    <option value="">Select Length</option>
+                    <option value="Short">📏 Short</option>
+                    <option value="Medium">📐 Medium</option>
+                    <option value="Long">🦅 Long</option>
+                    <option value="Extra Long">👑 Extra Long</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Notes (Optional)</label>
+                <textarea id="notes" rows="3" placeholder="Any special requests..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Upload Nail Design Photo (Optional)</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="nailPhoto" accept="image/*" onchange="previewImage(event)">
+                    <label for="nailPhoto" class="file-input-label">📸 Choose Nail Design Photo</label>
+                </div>
+                <div class="preview-container">
+                    <img id="imagePreview" class="nail-preview" alt="Nail Design Preview">
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn">💖 Book My Appointment 💖</button>
+        </form>
+
+        <div id="successMessage" class="success-message">
+            🎉 Thank you! Your booking has been received. We'll contact you soon to confirm! ✨
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminView" class="container admin-panel">
+        <div class="header">
+            <h1>👑 Admin Panel 👑</h1>
+            <p>Mingsha Luxe Nail Studio - Booking Management</p>
+        </div>
+
+        <div id="adminLogin" class="admin-login">
+            <h2 style="color: #ff69b4; margin-bottom: 20px;">Admin Access</h2>
+            <div class="form-group">
+                <label>Email for Notifications *</label>
+                <input type="email" id="adminEmail" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+                <label>Password *</label>
+                <input type="password" id="adminPassword" placeholder="Admin Password" required>
+            </div>
+            <button onclick="loginAdmin()">Login</button>
+        </div>
+
+        <div id="adminBookings" style="display: none;">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button onclick="showTab('bookings')" class="tab-btn active" style="flex: 1; padding: 10px;">📋 Bookings</button>
+                <button onclick="showTab('addBooking')" class="tab-btn" style="flex: 1; padding: 10px;">➕ Add Booking</button>
+                <button onclick="showTab('settings')" class="tab-btn" style="flex: 1; padding: 10px;">⚙️ Settings</button>
+            </div>
+
+            <!-- Bookings Tab -->
+            <div id="bookingsTab">
+                <h2 style="color: #ff1493; text-align: center; margin-bottom: 20px;">📋 Recent Bookings</h2>
+                <div id="bookingsContainer">
+                    <div class="loading">🔄 Loading bookings...</div>
+                </div>
+            </div>
+
+            <!-- Add Booking Tab -->
+            <div id="addBookingTab" style="display: none;">
+                <h2 style="color: #ff1493; text-align: center; margin-bottom: 20px;">➕ Create New Booking</h2>
+                <div class="add-booking-form">
+                    <form id="adminBookingForm">
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" id="adminFullName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Address *</label>
+                            <input type="text" id="adminAddress" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Number *</label>
+                            <input type="tel" id="adminContact" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="adminEmailClient" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Service *</label>
+                            <select id="adminService" required>
+                                <option value="">Select Service</option>
+                                <option value="Gel Manicure">💅 Gel Manicure</option>
+                                <option value="Structured Builder Gel">✨ Structured Builder Gel</option>
+                                <option value="Softgel Extension">🌸 Softgel Extension</option>
+                                <option value="Hardgel Overlay">💎 Hardgel Overlay</option>
+                                <option value="Hardgel Extension">🔥 Hardgel Extension</option>
+                                <option value="Removal of Nail Enhancement">🧴 Removal of Nail Enhancement</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Date *</label>
+                            <input type="date" id="adminDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Time *</label>
+                            <select id="adminTime" required>
+                                <option value="">Select Time</option>
+                                <option value="09:00 AM">09:00 AM</option>
+                                <option value="10:00 AM">10:00 AM</option>
+                                <option value="11:00 AM">11:00 AM</option>
+                                <option value="01:00 PM">01:00 PM</option>
+                                <option value="02:00 PM">02:00 PM</option>
+                                <option value="03:00 PM">03:00 PM</option>
+                                <option value="04:00 PM">04:00 PM</option>
+                                <option value="05:00 PM">05:00 PM</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nail Length *</label>
+                            <select id="adminNailLength" required>
+                                <option value="">Select Length</option>
+                                <option value="Short">📏 Short</option>
+                                <option value="Medium">📐 Medium</option>
+                                <option value="Long">🦅 Long</option>
+                                <option value="Extra Long">👑 Extra Long</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea id="adminNotes" rows="3" placeholder="Any special notes..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Status *</label>
+                            <select id="adminStatus" required>
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="reschedule">Reschedule</option>
+                            </select>
+                        </div>
+                        <button type="submit">➕ Create Booking</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settingsTab" style="display: none;">
+                <h2 style="color: #ff1493; text-align: center; margin-bottom: 20px;">⚙️ Notification Settings</h2>
+                <div class="form-group">
+                    <label>Enable Push Notifications (Desktop/Mobile)</label>
+                    <button onclick="enablePushNotifications()" class="btn" style="margin-top: 10px;">Enable Browser Notifications</button>
+                </div>
+                <hr style="margin: 20px 0; border: 1px solid #ffc0cb;">
+                <div class="form-group">
+                    <label>Telegram Bot Token (Optional)</label>
+                    <input type="text" id="telegramBotToken" placeholder="Get from @BotFather on Telegram" value="">
+                </div>
+                <div class="form-group">
+                    <label>Telegram Chat ID (Optional)</label>
+                    <input type="text" id="telegramChatId" placeholder="Your Telegram Chat ID" value="">
+                </div>
+                <button onclick="saveTelegramSettings()" style="margin-top: 10px;">Save Telegram Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeImageModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <script>
+        // 🔥 YOUR FIREBASE CONFIG - Get this from Firebase Console
+        const firebaseConfig = {
+            // REPLACE WITH YOUR CONFIG FROM FIREBASE CONSOLE
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const bookingsRef = database.ref('mingshaBookings');
+
+        // Admin password (change this)
+        const ADMIN_PASSWORD = "mingsha123";
+
+        let isAdminLoggedIn = false;
+        let currentAdminEmail = '';
+
+        // Online status
+        function updateOnlineStatus() {
+            const status = document.getElementById('onlineStatus');
+            if (navigator.onLine) {
+                status.textContent = '🟢 Online - Real-time Sync';
+                status.className = 'online-status';
+                status.style.display = 'block';
+            } else {
+                status.textContent = '🔴 Offline Mode';
+                status.className = 'online-status offline';
+                status.style.display = 'block';
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+
+        // Set minimum date to today
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+        document.getElementById('adminDate').min = new Date().toISOString().split('T')[0];
+
+        function previewImage(event, previewId = 'imagePreview') {
+            const file = event.target.files[0];
+            const preview = document.getElementById(previewId);
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function toggleView() {
+            const clientView = document.getElementById('clientView');
+            const adminView = document.getElementById('adminView');
+            
+            if (clientView.style.display === 'none') {
+                clientView.style.display = 'block';
+                adminView.style.display = 'none';
+            } else {
+                clientView.style.display = 'none';
+                adminView.style.display = 'block';
+                if (isAdminLoggedIn) {
+                    document.getElementById('adminBookings').style.display = 'block';
+                    loadBookings();
+                } else {
+                    document.getElementById('adminLogin').style.display = 'block';
+                    document.getElementById('adminBookings').style.display = 'none';
+                }
+            }
+        }
+
+        function loginAdmin() {
+            const password = document.getElementById('adminPassword').value;
+            const email = document.getElementById('adminEmail').value;
+            
+            if (!email) {
+                alert('⚠️ Please enter your email address!');
+                return;
+            }
+            
+            if (password === ADMIN_PASSWORD) {
+                isAdminLoggedIn = true;
+                currentAdminEmail = email;
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminBookings').style.display = 'block';
+                loadBookings();
+            } else {
+                alert('❌ Incorrect Password!');
+                document.getElementById('adminPassword').value = '';
+            }
+        }
+
+        // Client booking submission
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '📤 Submitting...';
+
+            const formData = {
+                id: Date.now(),
+                fullName: document.getElementById('fullName').value,
+                address: document.getElementById('address').value,
+                contact: document.getElementById('contact').value,
+                email: document.getElementById('email').value,
+                service: document.getElementById('service').value,
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value,
+                nailLength: document.getElementById('nailLength').value,
+                notes: document.getElementById('notes').value || '',
+                nailPhoto: document.getElementById('nailPhoto').files[0] ? 
+                          document.getElementById('imagePreview').src : null,
+                status: 'pending',
+                seen: false,
+                source: 'client',
+                timestamp: new Date().toLocaleString('en-PH')
+            };
+
+            // Save to Firebase (with offline support)
+            bookingsRef.push(formData).then(() => {
+                showSuccessMessage();
+                this.reset();
+                document.getElementById('imagePreview').style.display = 'none';
+                showNotification(formData);
+            }).catch(error => {
+                console.error('Error saving booking:', error);
+                alert('⚠️ Error saving booking. Please try again.');
+            }).finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '💖 Book My Appointment 💖';
+            });
+        });
+
+        // Admin booking submission
+        document.getElementById('adminBookingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                id: Date.now(),
+                fullName: document.getElementById('adminFullName').value,
+                address: document.getElementById('adminAddress').value,
+                contact: document.getElementById('adminContact').value,
+                email: document.getElementById('adminEmailClient').value,
+                service: document.getElementById('adminService').value,
+                date: document.getElementById('adminDate').value,
+                time: document.getElementById('adminTime').value,
+                nailLength: document.getElementById('adminNailLength').value,
+                notes: document.getElementById('adminNotes').value || '',
+                status: document.getElementById('adminStatus').value,
+                seen: true,
+                source: 'admin',
+                timestamp: new Date().toLocaleString('en-PH')
+            };
+
+            bookingsRef.push(formData).then(() => {
+                alert('✅ New booking created successfully!');
+                this.reset();
+                loadBookings();
+            }).catch(error => {
+                console.error('Error creating booking:', error);
+                alert('⚠️ Error creating booking. Please try again.');
+            });
+        });
+
+        function showSuccessMessage() {
+            const successMsg = document.getElementById('successMessage');
+            successMsg.style.display = 'block';
+            successMsg.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 5000);
+        }
+
+        function showNotification(booking) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('🎉 New Booking Received!', {
+                    body: `New appointment from ${booking.fullName} for ${booking.date} at ${booking.time}`,
+                    icon: '💅'
+                });
+            }
+            sendEmailNotification(booking);
+        }
+
+        function sendEmailNotification(booking) {
+            if (!currentAdminEmail) return;
+
+            const telegramBotToken = localStorage.getItem('telegramBotToken');
+            const telegramChatId = localStorage.getItem('telegramChatId');
+            
+            if (telegramBotToken && telegramChatId) {
+                const message = `🎉 ${booking.source === 'admin' ? 'New Admin Booking!' : 'New Client Booking!'}\n\n👤 ${booking.fullName}\n📞 ${booking.contact}\n💅 ${booking.service}\n📅 ${booking.date}\n🕐 ${booking.time}\n📍 ${booking.address}\n${booking.notes ? '📝 ' + booking.notes : ''}`;
+                fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({chat_id: telegramChatId, text: message})
+                }).catch(err => console.log('Telegram notification sent'));
+            }
+        }
+
+        // Real-time bookings listener
+        function listenForBookings() {
+            bookingsRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
+                const bookings = [];
+                snapshot.forEach((childSnapshot) => {
+                    bookings.unshift(childSnapshot.val());
+                });
+                displayBookings(bookings);
+            });
+        }
+
+        function loadBookings() {
+            document.getElementById('bookingsContainer').innerHTML = '<div class="loading">🔄 Loading bookings...</div>';
+            listenForBookings();
+        }
+
+        function displayBookings(bookings) {
+            const container = document.getElementById('bookingsContainer');
+            
+            if (bookings.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #ff69b4;">No bookings yet! 🎉</p>';
+                return;
+            }
+
+            container.innerHTML = bookings.map((booking, index) => `
+                <div class="booking-item">
+                    <h3>👋 ${booking.fullName} ${booking.source === 'admin' ? '(Admin)' : ''}</h3>
+                    <div class="booking-details">
+                        <strong>📍 Address:</strong> ${booking.address}<br>
+                        <strong>📞 Contact:</strong> ${booking.contact}<br>
+                        <strong>✉️ Email:</strong> ${booking.email}<br>
+                        <strong>💅 Service:</strong> ${booking.service}<br>
+                        <strong>📅 Date:</strong> ${booking.date}<br>
+                        <strong>🕒 Time:</strong> ${booking.time}<br>
+                        <strong>📏 Nail Length:</strong> ${booking.nailLength}<br>
+                        ${booking.notes ? `<strong>📝 Notes:</strong> ${booking.notes}<br>` : ''}
+                        <strong>📱 Submitted:</strong> ${booking.timestamp}
+                    </div>
+                    ${booking.nailPhoto ? `<img src="${booking.nailPhoto}" class="nail-image-admin" alt="Nail Design" onclick="showImageModal('${booking.nailPhoto}')">` : ''}
+                    <div class="booking-actions">
+                        <label>Status:</label>
+                        <select class="status-select" onchange="updateStatus('${booking.id || booking.key}', this.value)">
+                            <option value="pending" ${booking.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="confirmed" ${booking.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="reschedule" ${booking.status === 'reschedule' ? 'selected' : ''}>Reschedule</option>
+                            <option value="cancel" ${booking.status === 'cancel' ? 'selected' : ''}>Cancel</option>
+                            <option value="no show" ${booking.status === 'no show' ? 'selected' : ''}>No Show</option>
+                        </select>
+                        <button onclick="deleteBooking('${booking.id || booking.key}')" class="delete-btn">Delete</button>
+                    </div>
+                    <hr style="margin: 15px 0; border: 1px solid #ff69b4;">
+                    <small>Booking #${index + 1} | ID: ${booking.id || booking.key}</small>
+                </div>
+            `).join('');
+        }
+
+        function updateStatus(bookingId, status) {
+            const bookingRef = database.ref(`mingshaBookings/${bookingId}`);
+            bookingRef.update({ status: status });
+        }
+
+        function deleteBooking(bookingId) {
+            if (confirm('Are you sure you want to delete this booking?')) {
+                database.ref(`mingshaBookings/${bookingId}`).remove();
+            }
+        }
+
+        function showImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'flex';
+            modalImg.src = src;
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+
+        function showTab(tab) {
+            document.getElementById('bookingsTab').style.display = tab === 'bookings' ? 'block' : 'none';
+            document.getElementById('addBookingTab').style.display = tab === 'addBooking' ? 'block' : 'none';
+            document.getElementById('settingsTab').style.display = tab === 'settings' ? 'block' : 'none';
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function enablePushNotifications() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification('✅ Push Notifications Enabled!', {
+                            body: 'You will now receive notifications for new bookings',
+                            icon: '💅'
+                        });
+                    }
+                });
+            }
+        }
+
+        function saveTelegramSettings() {
+            const botToken = document.getElementById('telegramBotToken').value;
+            const chatId = document.getElementById('telegramChatId').value;
+            
+            localStorage.setItem('telegramBotToken', botToken);
+            localStorage.setItem('telegramChatId', chatId);
+            alert('✅ Telegram settings saved!');
+        }
+
+        // Request notification permission on load
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    </script>
+</body>
+</html>

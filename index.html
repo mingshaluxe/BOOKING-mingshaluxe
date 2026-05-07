@@ -898,8 +898,6 @@
         }
 
         function sendEmailNotification(booking) {
-            if (!currentAdminEmail) return;
-
             const telegramBotToken = localStorage.getItem('telegramBotToken');
             const telegramChatId = localStorage.getItem('telegramChatId');
             
@@ -1016,6 +1014,11 @@
             document.getElementById('addBookingTab').style.display = tab === 'addBooking' ? 'block' : 'none';
             document.getElementById('settingsTab').style.display = tab === 'settings' ? 'block' : 'none';
             
+            // Load Telegram settings when settings tab is opened
+            if (tab === 'settings') {
+                loadTelegramSettings();
+            }
+            
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             if (button instanceof Element) {
                 button.classList.add('active');
@@ -1047,10 +1050,25 @@
             alert('✅ Telegram settings saved!');
         }
 
+        function loadTelegramSettings() {
+            const savedBotToken = localStorage.getItem('telegramBotToken');
+            const savedChatId = localStorage.getItem('telegramChatId');
+            
+            if (savedBotToken) {
+                document.getElementById('telegramBotToken').value = savedBotToken;
+            }
+            if (savedChatId) {
+                document.getElementById('telegramChatId').value = savedChatId;
+            }
+        }
+
         // Request notification permission on load
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
         }
+
+        // Load saved Telegram settings on page load
+        loadTelegramSettings();
     </script>
 </body>
 </html>

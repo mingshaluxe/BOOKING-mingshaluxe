@@ -599,14 +599,13 @@
                             <label>Preferred Time *</label>
                             <select id="adminTime" required>
                                 <option value="">Select Time</option>
-                                <option value="09:00 AM">09:00 AM</option>
-                                <option value="10:00 AM">10:00 AM</option>
-                                <option value="11:00 AM">11:00 AM</option>
-                                <option value="01:00 PM">01:00 PM</option>
-                                <option value="02:00 PM">02:00 PM</option>
-                                <option value="03:00 PM">03:00 PM</option>
-                                <option value="04:00 PM">04:00 PM</option>
-                                <option value="05:00 PM">05:00 PM</option>
+                                <option value="08:00 AM">08:00 AM</option>
+                                <option value="12:30 PM">12:30 PM</option>
+                                <option value="03:30 PM">03:30 PM</option>
+                                <option value="06:30 PM">06:30 PM</option>
+                                <option value="11:00 PM">Night Glam 12:00 AM</option>
+                                <option value="02:00 AM">Night Glam 03:00 AM</option>
+                                <option value="05:00 AM">Night Glam 06:00 AM</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -653,6 +652,7 @@
                     <input type="text" id="telegramChatId" placeholder="Your Telegram Chat ID" value="">
                 </div>
                 <button onclick="saveTelegramSettings()" style="margin-top: 10px;">Save Telegram Settings</button>
+                <button onclick="testTelegramSettings()" style="margin-top: 10px; background: #4CAF50;">🧪 Test Telegram Settings</button>
             </div>
         </div>
     </div>
@@ -901,13 +901,35 @@
             const telegramBotToken = localStorage.getItem('telegramBotToken');
             const telegramChatId = localStorage.getItem('telegramChatId');
             
+            console.log('📤 Attempting to send Telegram notification...');
+            console.log('Bot Token exists:', !!telegramBotToken);
+            console.log('Chat ID exists:', !!telegramChatId);
+            
             if (telegramBotToken && telegramChatId) {
                 const message = `🎉 ${booking.source === 'admin' ? 'New Admin Booking!' : 'New Client Booking!'}\n\n👤 ${booking.fullName}\n📞 ${booking.contact}\n💅 ${booking.service}\n📅 ${booking.date}\n🕐 ${booking.time}\n📍 ${booking.address}\n${booking.notes ? '📝 ' + booking.notes : ''}`;
+                
+                console.log('📨 Sending message to Telegram...');
                 fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({chat_id: telegramChatId, text: message})
-                }).catch(err => console.log('Telegram notification sent'));
+                })
+                .then(response => {
+                    console.log('✅ Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.ok) {
+                        console.log('✅ Telegram notification sent successfully!');
+                    } else {
+                        console.error('❌ Telegram API error:', data.description);
+                    }
+                })
+                .catch(err => {
+                    console.error('❌ Error sending Telegram notification:', err);
+                });
+            } else {
+                console.log('⚠️ Telegram credentials not set');
             }
         }
 
@@ -1060,6 +1082,38 @@
             if (savedChatId) {
                 document.getElementById('telegramChatId').value = savedChatId;
             }
+        }
+
+        function testTelegramSettings() {
+            const botToken = document.getElementById('telegramBotToken').value.trim();
+            const chatId = document.getElementById('telegramChatId').value.trim();
+            
+            if (!botToken || !chatId) {
+                alert('⚠️ Please enter both Bot Token and Chat ID first!');
+                return;
+            }
+            
+            const testMessage = '✅ Test notification from Mingsha Luxe Nail Studio!\n\nIf you see this message, your Telegram settings are working correctly! 🎉';
+            
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({chat_id: chatId, text: testMessage})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    alert('✅ Test message sent successfully! Check your Telegram.');
+                    console.log('✅ Telegram test successful:', data);
+                } else {
+                    alert(`❌ Error: ${data.description}\n\nCommon issues:\n• Wrong Bot Token\n• Wrong Chat ID\n• Bot not started in Telegram`);
+                    console.error('❌ Telegram error:', data);
+                }
+            })
+            .catch(err => {
+                alert('❌ Network error. Check console for details.');
+                console.error('❌ Telegram test failed:', err);
+            });
         }
 
         // Request notification permission on load

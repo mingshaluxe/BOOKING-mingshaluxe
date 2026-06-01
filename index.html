@@ -689,8 +689,11 @@
         // Initialize Firebase
         try {
             firebase.initializeApp(firebaseConfig);
-            database = firebase.database();
-            bookingsRef = database.ref('mingshaBookings');
+
+const auth = firebase.auth();
+
+database = firebase.database();
+bookingsRef = database.ref('mingshaBookings');
         } catch (error) {
             console.warn('Firebase not available, running in demo mode');
             // In demo mode, bookingsRef remains undefined, functions will handle it

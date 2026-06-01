@@ -222,8 +222,29 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
     margin: 20px 0;
+}
+
+.slot-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    background: linear-gradient(45deg, #ff69b4, #ff1493);
+    color: white;
+    border-radius: 25px;
+    padding: 10px 20px;
+    min-width: 150px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.slot-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(255, 105, 180, 0.4);
 }
 
 .view-toggle a.toggle-btn {
@@ -422,13 +443,14 @@
                 📞 0931 883 3614 | ✉️ mingshaluxenailstudio@gmail.com
             </div>
         </div>
-       <div class="view-toggle" style="display:flex; justify-content:center; gap:10px;">
+      <div class="view-toggle">
 
     <a href="https://mingshaluxe.github.io/CALENDAR-mingshaluxe/"
-   target="_blank"
-   class="toggle-btn slot-link">
-   📅 Available Slots
-</a>
+       target="_blank"
+       class="toggle-btn slot-btn">
+       📅 Available Slots
+    </a>
+
 
     <button class="toggle-btn" onclick="toggleView()">
         Admin View
